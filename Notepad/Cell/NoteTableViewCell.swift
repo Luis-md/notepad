@@ -22,8 +22,7 @@ class NoteTableViewCell: UITableViewCell {
     
     let textContent: UILabel = {
         let txt = UILabel()
-//        txt.isEditable = false
-//        txt.tintColor = .black
+        txt.lineBreakMode = .byWordWrapping
         txt.numberOfLines = 0
         txt.translatesAutoresizingMaskIntoConstraints = false
         return txt
@@ -40,27 +39,29 @@ class NoteTableViewCell: UITableViewCell {
     }
     
     private func config() {
-        self.configCell()
+//        self.configCell()
         self.configTxt()
     }
     
     private func configTxt() {
-        self.cellView.addSubview(self.textContent)
+        //self.cellView.addSubview(self.textContent)
+        self.addSubview(self.textContent)
         NSLayoutConstraint.activate([
-            self.textContent.centerYAnchor.constraint(equalTo: self.cellView.centerYAnchor),
-            self.textContent.leftAnchor.constraint(equalTo: self.cellView.leftAnchor),
-            self.textContent.rightAnchor.constraint(equalTo: self.cellView.rightAnchor)
+            self.textContent.topAnchor.constraint(equalTo: self.topAnchor, constant: 8),
+            self.textContent.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -8),
+            self.textContent.leftAnchor.constraint(equalTo: self.leftAnchor, constant: 16),
+            self.textContent.rightAnchor.constraint(equalTo: self.rightAnchor, constant: -16)
         ])
     }
     
-    private func configCell() {
-        self.addSubview(self.cellView)
-        NSLayoutConstraint.activate([
-            self.cellView.topAnchor.constraint(equalTo: self.topAnchor),
-            self.cellView.rightAnchor.constraint(equalTo: self.rightAnchor, constant: -16),
-            self.cellView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-            self.cellView.leftAnchor.constraint(equalTo: self.leftAnchor)
-        ])
-    }
+//    private func configCell() {
+//        self.addSubview(self.cellView)
+//        NSLayoutConstraint.activate([
+//            self.cellView.topAnchor.constraint(equalTo: self.topAnchor),
+//            self.cellView.rightAnchor.constraint(equalTo: self.rightAnchor, constant: -16),
+//            self.cellView.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+//            self.cellView.leftAnchor.constraint(equalTo: self.leftAnchor)
+//        ])
+//    }
 
 }

@@ -11,11 +11,12 @@ import CoreData
 
 class NotepadViewController: UIViewController {
 
-    var content: [NoteTest] = []
+    var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    
+    var content: [Note] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         self.config()
     }
     
@@ -23,6 +24,7 @@ class NotepadViewController: UIViewController {
         self.navigationController?.navigationBar.topItem?.rightBarButtonItem = .init(barButtonSystemItem: .add, target: self, action: #selector(addContent))
         self.navigationItem.title = "Notes"
         self.configTableView()
+        self.loadNotes()
     }
     
     let tableView: UITableView = {
@@ -30,6 +32,8 @@ class NotepadViewController: UIViewController {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.separatorStyle = .singleLine
         tableView.backgroundColor = .white
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 44  
         tableView.register(NoteTableViewCell.self, forCellReuseIdentifier: "cell")
         return tableView
     }()
@@ -38,6 +42,7 @@ class NotepadViewController: UIViewController {
         self.view.addSubview(self.tableView)
         self.tableView.delegate = self
         self.tableView.dataSource = self
+
         NSLayoutConstraint.activate([
             self.tableView.topAnchor.constraint(equalTo: self.view.topAnchor),
             self.tableView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
@@ -46,21 +51,45 @@ class NotepadViewController: UIViewController {
         ])
     }
     
+    private func saveNote() {
+        do {
+            try context.save()
+        } catch {
+            print(error)
+        }
+        self.tableView.reloadData()
+    }
+    
+    private func loadNotes() {
+        let request: NSFetchRequest<Note> = Note.fetchRequest()
+        do {
+            self.content = try self.context.fetch(request)
+        } catch {
+            print(error)
+        }
+    }
+    
     @objc private func addContent() {
-                
         let alert = UIAlertController(title: "Add a note", message: "", preferredStyle: .alert)
         
+        var textField = UITextField()
+        
         let add = UIAlertAction(title: "Add", style: .default) { (UIAlertAction) in
-            let textField = alert.textFields![0] as UITextField
-            if let title = textField.text {
-                let newNote = NoteTest(title: title, text: "")
-                self.content.append(newNote)
+            let newNote = Note(context: self.context)
+            newNote.title = textField.text!
+            
+            if(newNote.title?.trimmingCharacters(in: .whitespacesAndNewlines) == "") {
+                return self.dismiss(animated: true, completion: nil)
             }
-            self.tableView.reloadData()
+            
+            self.content.append(newNote)
+            
+            self.saveNote()
         }
         
-        alert.addTextField( configurationHandler: { (textField) in
-            textField.placeholder = "Note's title"
+        alert.addTextField( configurationHandler: { (alertTextField) in
+            alertTextField.placeholder = "Note's title"
+            textField = alertTextField
         })
         
         let cancel = UIAlertAction(title: "Cancel", style: .destructive) { (UIAlertAction) in
@@ -81,16 +110,27 @@ extension NotepadViewController : UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! NoteTableViewCell
-        cell.bind(txt: content[indexPath.row].title)
+        cell.bind(txt: content[indexPath.row].title!)
         return cell
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         return nil
     }
-    
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return CGFloat.leastNonzeroMagnitude
+    }
+    
+    func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if (editingStyle == .delete) {
+            context.delete(content[indexPath.row])
+            self.content.remove(at: indexPath.row)
+            self.saveNote()
+        }
     }
 }
 
